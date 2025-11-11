@@ -6,7 +6,11 @@
 
 ## Overview
 
-This project aims to **complete the default GPT-small → Summary/Classification → RAG pipeline** and then **improve the generator with LoRA (PEFT)** so that the final system produces **more fluent and consistent answers under a retrieval-augmented setting**—without paying the full cost of end-to-end fine-tuning.
+This project aims to get Improvement on RAG through LoRA finetuing task.
+
+Total pipeline : **complete the default GPT-small → Summary/Classification → RAG pipeline** and then **improve the generator with LoRA (PEFT)** 
+
+Then, final system produces **more fluent and consistent answers under a retrieval-augmented setting**.
 - **Attribution (important)**: The LoRA fine-tuning pipeline is **adapted directly from the official Self-RAG code (`finetune.py`)** by Asai et al., with **minimal modifications** to fit our dataset, tokenizer, and training flags.  
      *We explicitly acknowledge Self-RAG as the source of the fine-tuning script design and implementation.* 
 
