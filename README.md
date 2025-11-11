@@ -49,7 +49,7 @@ Then, final system produces **more fluent and consistent answers under a retriev
       ```
 
 
-For further information, please refer to **`25_06_09 NLP Presentation.pdf`**, and **`NLP_Final_Project_20201200.pdf`**.
+For further information, please refer to [**`25_06_09 NLP Presentation.pdf`**](https://github.com/suri7897/RAG-Improvement-via-LoRA-Fine-Tuning/blob/main/25_06_09%20NLP%20Presentation.pdf), and [**`NLP_Final_Project_20201200.pdf`**](https://github.com/suri7897/RAG-Improvement-via-LoRA-Fine-Tuning/blob/main/NLP_Final_Project_20201200.pdf).
 
 ## **Usage Instructions**
 
