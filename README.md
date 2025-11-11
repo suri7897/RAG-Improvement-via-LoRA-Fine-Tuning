@@ -1,7 +1,8 @@
 # RAG Improvement via LoRA FineTuning
 
 >[!NOTE]
-This respiratory contains codes for Final project of 'Natural Language Processing` Course (2025-1), and instructed by Prof. [Seung-Hoon Na](nash@unist.ac.kr) in UNIST. Almost every code for this project is given as skeleton code.
+> This respiratory contains codes for Final project of **'Natural Language Processing'** Course, instructed by Prof. [Seung-Hoon Na](nash@unist.ac.kr) in UNIST.
+> Almost every code for default project is given as skeleton code, and code for LoRA finetuning task is **adapted directly from the official Self-RAG code (`finetune.py`)** by Asai et al.
 
 ## Overview
 
