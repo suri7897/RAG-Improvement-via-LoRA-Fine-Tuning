@@ -94,11 +94,12 @@ DO_ZEROSHOT_RAG_PROMPT # Do LoRA finetuning on Llama-3.2-1B-Instruct model.
 - Pipeline: **Pretrain → Summary/Classification fine-tune**.
 
 ### 2) RAG (GPT-small)
-- Setup: **BM25 retriever + GPT-small generator**.
+- Pipeline : **Pretrained_GPT / Llama-3.2-1B-Instruct model → Finetune RAG**
+- In zero-shot RAG, we evaluate three prompt templates: **Original**, **Chain-of-Thought (CoT)**, and **Custom (My Prompt)**.
 
 ### 3) LoRA Fine-Tuning
 - **Summary + LoRA**: Improves ROUGE and reduces repetition, resulting more natural answer.
-- **RAG -> LoRA**: Improves ROUGE, and **EM** often improves.
-- **LoRA -> RAG** : Improves ROUGE score, but **EM** is decreased.
+- **RAG → LoRA**: Improves ROUGE, and **EM** often improves.
+- **LoRA → RAG** : Improves ROUGE score, but **EM** is decreased.
 
 
