@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-## This is code for finetuning gpt-model using lora.
-## Original code is from self-rag paper by Akari Asai, et al. / https://arxiv.org/abs/2310.11511
-## slightly modified from https://github.com/AkariAsai/self-rag.git
-
 import argparse
 import logging
 import math
@@ -22,9 +18,11 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from typing import Optional, Dict, Sequence
 import json
+import transformers
+transformers.utils.logging.set_verbosity_error()
 
 import sys
-from model_lora import TransformerForCausalLM, TransformerConfig
+from model import TransformerForCausalLM, TransformerConfig
 
 import transformers
 from transformers import (
@@ -284,16 +282,13 @@ def encode_with_prompt_completion_format(example, tokenizer, max_seq_length, con
     source_len = sources_tokenized["input_ids_lens"]
     labels = copy.deepcopy(input_ids)
 
-    # 라벨 마스킹
     labels[:source_len - 1] = -100
 
-    # 유효하지 않은 라벨 제거 (라벨은 반드시 0 <= label < vocab_size 또는 == -100)
-    vocab_size = tokenizer.vocab_size  # 또는 model.config.vocab_size
+    vocab_size = tokenizer.vocab_size
     labels = torch.where((labels >= vocab_size) & (labels != -100), torch.tensor(-100), labels)
 
     if context_markups is not None and len(context_markups) == 2:
         try:
-            # context 시작 토큰 찾기
             context_start = None
             for j, orig_token in enumerate(labels[source_len:]):
                 if orig_token == context_markups[0]:
@@ -310,7 +305,6 @@ def encode_with_prompt_completion_format(example, tokenizer, max_seq_length, con
                 if context_end is None:
                     context_end = len(labels)
 
-                # context 내부 마스킹
                 labels[context_start + 1:context_end] = -100
 
         except Exception as e:
@@ -389,7 +383,7 @@ def main():
     args = parse_args()
 
 
-    context_markups = None  # 🔧 context_markups를 명시적으로 선언
+    context_markups = None 
 
 
     # A hacky way to make llama work with flash attention
@@ -529,7 +523,7 @@ def main():
             r=args.lora_rank,
             lora_alpha=args.lora_alpha,
             lora_dropout=args.lora_dropout,
-            target_modules=["q_proj", "v_proj"]  # ← 이 부분 추가
+            target_modules=["q_proj", "v_proj"]
         )
         model = get_peft_model(model, peft_config)
         model.print_trainable_parameters()

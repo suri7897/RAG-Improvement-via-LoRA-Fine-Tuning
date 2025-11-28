@@ -73,13 +73,14 @@ DO_FINETUNE_SM # Finetuning pretrained model for summary task.
 DO_FINETUNE_CF # Finetuning pretrained model for classification task.
 DO_FINETUNE_RAG # Finetune RAG on pretrained model.
 DO_ZEROSHOT_RAG # Do RAG finetuning on Llama-3.2-1B-Instruct model.
-DO_PRE_FINETUNED_RAG # Do RAG finetuning on LoRA finetuned model.
+DO_FINETUNE_SM_LORA # LoRA finetuning on Summary finetuned model.
+DO_EVAL_SUMMARY_LORA # Evaluate Lora Finetuned model on summary task.
+DO_FINETUNE_RAG_LORA # Do LoRA finetuning, then do RAG finetuning.
+DO_EVAL_RAG_LORA # Evaluate Lora Finetuned rag model.
 DO_SUBMISSION # Do Compression for submission
-DO_SUMMARY_LORA_FINETUNE # LoRA finetuning on Summary finetuned model.
-DO_RAG_LORA_FINETUNE # Do RAG finetuning, then do LoRA finetuning.
-DO_ZEROSHOT_RAG_PROMPT # Do LoRA finetuning on Llama-3.2-1B-Instruct model.
 
 ```
+
 
 3) **Typical run order**
 ```

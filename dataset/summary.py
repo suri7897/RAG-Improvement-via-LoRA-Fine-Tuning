@@ -74,74 +74,80 @@ def _preprocess(examples, tokenizer, context_column_name, target_column_name, co
     contexts = tokenizer.batch_decode(contexts["input_ids"], skip_special_tokens=True)
     targets = tokenizer.batch_decode(targets["input_ids"], skip_special_tokens=True)
 
-    #! fill here 
-    ######!
+    # fill here
+    ######
     
+    #### YOUR CODES; TODO 
+
     input_ids_list = []
     attention_mask_list = []
     labels_list = []
 
+    total_max_length = context_max_length + target_max_length
+
     for context, target in zip(contexts, targets):
-        prompt_with_context = prompt.format(context=context)
+        prompt_text = prompt.format(context=context)         
+        full_text = prompt_text + target                     
 
-        model_input = tokenizer(
-            prompt_with_context,
+        tokenized_full = tokenizer(
+            full_text,
+            add_special_tokens=False,
+            truncation=True,
+            max_length=total_max_length,
+            padding="max_length",
+        )
+
+        tokenized_prompt_ctx = tokenizer(
+            prompt_text,
+            add_special_tokens=False,
+            truncation=True,
             max_length=context_max_length,
-            truncation=True,
             padding=False,
-            return_tensors="pt"
         )
+        prompt_ctx_len = len(tokenized_prompt_ctx["input_ids"])
 
-        label = tokenizer(
-            target,
-            max_length=target_max_length,
-            truncation=True,
-            padding=False,
-            return_tensors="pt"
-        )
+        input_ids = tokenized_full["input_ids"]
+        attention_mask = tokenized_full["attention_mask"]
+        labels = input_ids.copy()
+        labels[:prompt_ctx_len] = [-100] * prompt_ctx_len
 
-        input_ids = model_input["input_ids"].squeeze(0)
-        attention_mask = model_input["attention_mask"].squeeze(0)
-        label_ids = label["input_ids"].squeeze(0)
-
-        labels = torch.full_like(input_ids, -100)
-        target_len = min(len(target_ids), len(input_ids))
-        labels[-target_len:] = target_ids[-target_len:]  
-
-        input_ids_list.append(input_ids.tolist())
-        attention_mask_list.append(attention_mask.tolist())
-        labels_list.append(labels.tolist())
+        input_ids_list.append(input_ids)
+        attention_mask_list.append(attention_mask)
+        labels_list.append(labels)
 
     inputs = {
         "input_ids": input_ids_list,
         "attention_mask": attention_mask_list,
-        "labels": labels_list
+        "labels": labels_list,
     }
-
-    ######!
+    
+    ######
     return inputs
 
-def collate_fn_for_summary(batch, tokenizer, pad_to_multiple_of=64):
+def collate_fn_for_summary(batch, tokenizer, pad_to_multiple_of=1024):
     input_ids = [example["input_ids"] for example in batch]
     attention_mask = [example["attention_mask"] for example in batch]
     labels = [example["labels"] for example in batch]
 
-    max_len = max(len(seq) for seq in input_ids)
-    if pad_to_multiple_of:
-        max_len = ((max_len + pad_to_multiple_of - 1) // pad_to_multiple_of) * pad_to_multiple_of
+    input_ids = torch.tensor(input_ids, dtype=torch.long)
+    attention_mask = torch.tensor(attention_mask, dtype=torch.long)
+    labels = torch.tensor(labels, dtype=torch.long)
 
-    def pad(seq, pad_val): return seq + [pad_val] * (max_len - len(seq))
+    max_seq_length = attention_mask.eq(1).sum(-1).max().item()
+    if max_seq_length % pad_to_multiple_of != 0:
+        max_seq_length = (max_seq_length // pad_to_multiple_of + 1) * pad_to_multiple_of
 
-    input_ids = [pad(seq, tokenizer.pad_token_id) for seq in input_ids]
-    attention_mask = [pad(seq, 0) for seq in attention_mask]
-    labels = [pad(seq, -100) for seq in labels] 
-    labels = [
-        [label if mask == 1 else -100 for label, mask in zip(label_seq, mask_seq)]
-        for label_seq, mask_seq in zip(labels, attention_mask)
-    ]
+    if tokenizer.padding_side == "left":
+        input_ids = input_ids[:, -max_seq_length:]
+        attention_mask = attention_mask[:, -max_seq_length:]
+        labels = labels[:, -max_seq_length:]
+    else:
+        input_ids = input_ids[:, :max_seq_length]
+        attention_mask = attention_mask[:, :max_seq_length]
+        labels = labels[:, :max_seq_length]
 
     return {
-        "input_ids": torch.tensor(input_ids, dtype=torch.long),
-        "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
-        "labels": torch.tensor(labels, dtype=torch.long)
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "labels": labels
     }

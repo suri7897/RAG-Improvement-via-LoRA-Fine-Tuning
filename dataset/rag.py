@@ -120,11 +120,9 @@ class RAGDataset(Dataset):
             # fill here
             ######!
 
-            ctxs = (
-                inputs.get('positive_ctxs') or [] +
-                inputs.get('negative_ctxs') or [] +
-                inputs.get('hard_negative_ctxs') or []
-            )
+            ctxs = []
+            for key in ['positive_ctxs', 'negative_ctxs', 'hard_negative_ctxs']:
+                ctxs.extend(inputs.get(key, []))
             
             if len(ctxs) == 0:
                 raise ValueError(f"No context found in input[{index}] for uid {uid}")

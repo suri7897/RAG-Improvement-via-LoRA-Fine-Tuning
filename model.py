@@ -63,16 +63,15 @@ def apply_rotary_emb(x, position_embeddings):
     # x: (batch_size, num_attention_heads, seq_len, head_dim)
     #######
 
-    cos, sin = position_embeddings
-
-    x1 = x[..., 0::2] 
+    x1 = x[..., 0::2]
     x2 = x[..., 1::2]
 
-    x = torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)
-    
+    x = torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim = -1)
+        
+    #### YOUR CODES; TODO 
+     
     #######
     return x
-
 
 def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
     batch, num_key_value_heads, slen, head_dim = hidden_states.shape
@@ -80,7 +79,6 @@ def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
         return hidden_states
     hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
     return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
-
 
 class RMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-5):
@@ -90,14 +88,16 @@ class RMSNorm(nn.Module):
 
     def forward(self, x):
         # fill here: rms normalization
-        #######!
+        #######
         
-        norm = x.norm(2, dim=-1, keepdim=True)  
-        rms = norm / (x.shape[-1] ** 0.5)      
-        x_normalized = x / (rms + self.eps)    
-        output = x_normalized * self.weight   
-            
-        #######!
+        #### YOUR CODES; TODO 
+
+        norm = x.norm(2, dim=-1, keepdim=True)
+        rms = norm / (x.shape[-1] ** 0.5)
+        x_normalized = x / (rms + self.eps)
+        output = x_normalized * self.weight
+        
+        #######
         return output
 
     def extra_repr(self):
@@ -112,9 +112,11 @@ class RotaryEmbedding(nn.Module):
         # shape hint
         # inv_freq: (1, head_dim // 2)
         ######
+        #### YOUR CODES; TODO 
+
         dim = config.head_dim // 2
         inv_freq = 1.0 / (config.rope_theta ** (torch.arange(0, dim, 1).float() / dim))
-        inv_freq = inv_freq.unsqueeze(0) 
+        inv_freq = inv_freq.unsqueeze(0)
         ######
 
         self.register_buffer("inv_freq", inv_freq, persistent=False)
@@ -128,7 +130,8 @@ class RotaryEmbedding(nn.Module):
             # cos,sin: (batch_size, seq_len, head_dim // 2)
             ######
             
-            seq_len = position_ids.size(1)  
+            #### YOUR CODES; TODO 
+ 
             inv_freq = self.inv_freq.to(position_ids.device)        
             sinusoid_inp = torch.einsum("bi,d->bid", position_ids, inv_freq.squeeze(0))  
 
@@ -179,31 +182,14 @@ class MultiHeadAttention(nn.Module):
         query_states = apply_rotary_emb(query_states, position_embeddings)
         key_states = apply_rotary_emb(key_states, position_embeddings)
 
-        # if past_key_value is not None:
-        #     key_cache, value_cache = past_key_value
-        #     key_states = torch.cat([key_cache, key_states], dim=-2)
-        #     value_states = torch.cat([value_cache, value_states], dim=-2)
-        #     past_key_value = (key_states, value_states)
-
-        ##! modified for shape matching
-        if self.num_key_value_groups > 1 and key_states.shape[1] != query_states.shape[1]:
-            key_states = repeat_kv(key_states, self.num_key_value_groups)
-            value_states = repeat_kv(value_states, self.num_key_value_groups)
-            
         if past_key_value is not None:
             key_cache, value_cache = past_key_value
-
-            if self.num_key_value_groups > 1 and key_cache.shape[1] != self.config.num_attention_heads:
-                key_cache = repeat_kv(key_cache, self.num_key_value_groups)
-                value_cache = repeat_kv(value_cache, self.num_key_value_groups)
-
             key_states = torch.cat([key_cache, key_states], dim=-2)
             value_states = torch.cat([value_cache, value_states], dim=-2)
             past_key_value = (key_states, value_states)
-        ##!
 
-        # key_states = repeat_kv(key_states, self.num_key_value_groups)
-        # value_states = repeat_kv(value_states, self.num_key_value_groups)
+        key_states = repeat_kv(key_states, self.num_key_value_groups)
+        value_states = repeat_kv(value_states, self.num_key_value_groups)
 
         # fill here: calculate attention weights
         # shape hint
@@ -211,18 +197,13 @@ class MultiHeadAttention(nn.Module):
         # attention_weights: (batch_size, num_attention_heads, seq_len, seq_len + cache_len)
         # attn_output: (batch_size, seq_len, hidden_size)
         #######
-        
-        if self.num_key_value_groups > 1 and key_states.shape[1] != query_states.shape[1]:
-            key_states = repeat_kv(key_states, self.num_key_value_groups)
-            value_states = repeat_kv(value_states, self.num_key_value_groups)
+
+        #### YOUR CODES; TODO 
 
         attn_weights = torch.matmul(query_states, key_states.transpose(-1, -2)) * self.scale
+
         if attention_mask is not None:
-            if attention_mask.dim() == 2:
-                attention_mask = attention_mask[:, None, None, :] 
-                attention_mask = attention_mask.expand(-1, 1, hidden_states.shape[1], -1) 
-            elif attention_mask.dim() == 3:  
-                attention_mask = attention_mask[:, None, :, :] 
+            attn_weights = attn_weights + attention_mask
 
         attn_weights = F.softmax(attn_weights, dim=-1)
         attn_output = torch.matmul(attn_weights, value_states)
@@ -248,6 +229,7 @@ class FeedForwardNetwork(nn.Module):
         # fill here: feed forward network
         ######
         
+        #### YOUR CODES; TODO 
         gate = self.act_fn(self.gate_proj(x))
         up = self.up_proj(x)
         hidden = gate * up
@@ -280,6 +262,8 @@ class TransformerLayer(nn.Module):
         # return layer hidden states and past key values with output of attention
         ######
         
+        #### YOUR CODES; TODO 
+
         residual = hidden_states
         hidden_states = self.input_layernorm(hidden_states)
         attn_output, past_key_value = self.self_attn(hidden_states, position_embeddings, attention_mask, past_key_value)
@@ -405,13 +389,26 @@ class TransformerModel(TransformerPreTrainedModel):
         # mask: (batch_size, 1, sequence_length, target_length)
         ######
         
-        if attention_mask is None:
-            attention_mask = torch.ones((batch_size, sequence_length), dtype=dtype, device=device)
+        #### YOUR CODES; TODO 
 
-        mask = attention_mask[:, None, :, None] * attention_mask[:, None, None, :]
-        mask = mask.to(dtype=dtype)
-        mask = (1.0 - mask) * -1e4
-        
+        # 1. Padding Mask
+        if attention_mask is None:
+            attention_mask = torch.ones(
+                (batch_size, target_length),
+                dtype=dtype,
+                device=device
+            )
+
+        padding_mask = attention_mask[:, None, None, :].to(dtype)
+        padding_mask = (1.0 - padding_mask) * -1e4
+
+        # 2. Causal Mask
+        q_pos = seen_token_length + torch.arange(sequence_length, device=device)[:, None]
+        k_pos = torch.arange(target_length, device=device)[None, :]
+
+        causal_mask = (k_pos > q_pos).to(dtype) * -1e4
+        causal_mask = causal_mask[None, None, :, :]
+        mask = causal_mask + padding_mask
         ######
         return mask
 
@@ -456,6 +453,9 @@ class TransformerForCausalLM(TransformerPreTrainedModel):
             # loss must be scalar
             ######
             
+            #### YOUR CODES; TODO 
+
+            #! Past code
             shift_logits = logits[..., :-1, :].contiguous()
             shift_labels = labels[..., 1:].contiguous()
             loss = F.cross_entropy(
@@ -468,22 +468,25 @@ class TransformerForCausalLM(TransformerPreTrainedModel):
             ######
         return (loss,logits) if loss is not None else (logits, past_key_values)
     
+    ##! For LoRA-Finetuning
     def get_input_embeddings(self):
-        return self.model.embed_tokens  #! for self-rag 
+        return self.model.embed_tokens
     
     def set_input_embeddings(self, value):
-        self.model.embed_tokens = value  # 또는 self.embed_tokens = value
+        self.model.embed_tokens = value 
     
     def prepare_inputs_for_generation(self, input_ids, past_key_values=None, attention_mask=None, **kwargs):
         if past_key_values:
-            input_ids = input_ids[:, -1:]  #! for self-rag Only feed last token if using past
+            input_ids = input_ids[:, -1:]
         return {
             "input_ids": input_ids,
             "past_key_values": past_key_values,
             "attention_mask": attention_mask,
             **kwargs,
     }
-
+    ##!
+    
+    
     @torch.no_grad()
     def generate(
         self,
@@ -525,7 +528,6 @@ class TransformerForCausalLM(TransformerPreTrainedModel):
                 break
         if return_response_only:
             return input_ids[:, init_seq_len:]
-        
         return input_ids
 
 class TransformerForSequenceClassification(TransformerPreTrainedModel):
