@@ -108,7 +108,7 @@ DO_SUBMISSION # Do Compression for submission
 
 ### 3) LoRA Fine-Tuning
 - **Summary + LoRA**: Improves ROUGE and reduces repetition, resulting more natural answer.
-- **RAG → LoRA**: Improves ROUGE, and **EM** often improves.
-- **LoRA → RAG** : Improves ROUGE score, but **EM** is decreased.
+- **RAG → LoRA**: Much degradation in accuracy and ROGUE score.
+- **Pretraining → LoRA → RAG** : Improves ROUGE score, but **EM** is decreased.
 
 
